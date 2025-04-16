@@ -1,0 +1,429 @@
+---
+title: "Advanced Bioinformatics 2025 assessment"
+author: "m1200414"
+date: "2025-03-25"
+output: html_document
+---
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org/"))
+```
+
+### GENERAL R/STUDIO ASSESSMENT
+
+## Task 3.1
+
+```{r}
+sum(5:55)
+```
+
+The : operator generates a sequence of all integers, as specified here between 5 and 55. The sum() function can then be used to calculate the sum of all these numbers. 
+
+## Task 3.2 
+
+```{r}
+sumfun <- function(n) {sum(5:n)}
+```
+
+We create a function called sumfun. We identified n as the input parameter. We identified what we would like the function to do. 
+
+```{r}
+sumfun(10)
+sumfun(20)
+sumfun(100)
+```
+
+We run the function for n = 10, n = 20, and n = 100. 
+The respective results are presented here. For n = 10, the result is 45. For n = 20, the result is 200. For n = 100, the result is 5040. 
+
+## Task 3.3 
+
+We create a vector with 12 numbers, representing the 12 positions within the series.
+```{r}
+fibonacci_series <- numeric(12)
+```
+
+We define the first two steps in the sequence as 1, 1.
+```{r}
+fibonacci_series[1] <- 1
+fibonacci_series[2] <- 1
+```
+
+We then use a "for" loop to calculate the remaining 10 numbers in the series (so position 3 to 12).
+```{r}
+for (i in 3:12) {
+  fibonacci_series[i] <- fibonacci_series[i-1] + fibonacci_series[i-2]
+}
+```
+
+We can then print the output. 
+```{r}
+print(fibonacci_series)
+```
+## Task 3.4
+First we install and load the required packages
+```{r}
+install.packages("ggplot2", dependencies = TRUE)
+library(ggplot2)
+```
+
+Then we load the dataset & review it
+```{r}
+data("mtcars")
+View(mtcars)
+```
+
+Then we generate the boxplot with mpg on the y axis and number of gears on the x axis
+```{r}
+boxplot(mtcars$mpg ~ mtcars$gear,
+        xlab="Number of Gears",
+        ylab="Miles per Gallon")
+```
+
+We can now add colour to the boxes 
+```{r}
+boxplot(mtcars$mpg ~ mtcars$gear,
+        xlab="Number of Gears",
+        ylab="Miles per Gallon",
+        col=c("lightblue", "lightgreen", "lightpink"))
+```
+
+## Task 3.5
+
+First we load & view the cars dataset
+```{r}
+data(cars)
+View(cars)
+```
+
+Then we define the object model1 & fit a linear relationship between speed and breaking distance.
+```{r}
+model1 <- lm(dist ~ speed, data = cars)
+```
+
+We can then use the summary to determine the fitted slops, and intercept of the line, and their standard errors. 
+```{r}
+summary(model1)
+```
+This indicates that:
+Intercept: -17.5791
+Standard error: 6.7584
+
+Slope: 3.9324
+Standard error: 0.4155
+
+We can determine the units used for the variables in this dataset using the following command 
+```{r}
+?cars
+```
+ 
+This indicates that speed is given in miles per hour and stopping distance is given in feet. 
+
+## Task 3.6
+We use ggplot to plot the data points, using geom_point to show the data points themselves, and geom_smooth to show the line of linear relationship between the speed and stopping distance.
+```{r}
+ggplot(cars, aes(x = speed, y= dist)) +
+    geom_point() +
+    geom_smooth(method = "lm", colour = "blue") +
+    labs(x= "Speed (mph)",
+         y= "Stopping distance (ft)")
+```
+
+## Task 3.7
+
+We want to know the reaction time in seconds. In order to ease the calculations, we should convert speed from miles per hour to feet per second. We create a new column with speed in feet per second. There are 5280 feet in a mile and 3600 seconds in an hour.   
+```{r}
+cars$speed_fps <- cars$speed * (5280/3600)
+```
+
+The breaking distance once breaking starts is assumed to be proportional to the square of the speed. We can call this a.
+a = b * speed^2
+where b is a constant of proportionality related to breaking distance once breaking starts. 
+
+The reaction distance is the relationship between reaction time and speed of travel. We can call this m. 
+m = n * speed 
+where n is the reaction time. 
+
+The total breaking distance can be called d. It is the sum of a and m.
+d = a + m
+d = (b * speed^2) + (n * speed)
+
+We can divide the equation by the speed.
+d/speed = (b * speed^2)/speed + (n * speed)/speed
+d/speed = b * speed + n 
+
+We can therefore estimate n, the intercept of this linear regression equation, from the available data. 
+We create a column outlining d/speed (distance in feet divided by speed in feet per second)
+```{r}
+cars$dist_over_speed <- cars$dist / cars$speed_fps
+```
+
+Now, we can fit a linear model of distance over speed, according to speed. And then view the summary data of this model estimating the reaction time (intercept).
+```{r}
+model2 <- lm(dist_over_speed ~ speed_fps, data = cars)
+summary(model2)
+```
+This suggests that the estimated reaction time is 0.86 seconds. This result appears to be reasonable, it is consistent with the literature, with a study by Dickerson et al. (2016) suggesting that reaction time ranges from 0.25 to 1.36 seconds).
+
+We can then plot the data points using ggplot. 
+```{r}
+ggplot(cars, aes(x=speed_fps, y=dist_over_speed)) +
+    geom_point() +
+    geom_smooth(method = "lm", colour = "blue") +
+  labs (
+    x = "Speed (ft/s)",
+    y = "Distance over speed"
+  )
+```
+
+To clarify, distance over speed (ft / (ft/s)), equates to time (total braking time) in seconds, so we can alter the labels of the graph to show this. 
+
+```{r}
+ggplot(cars, aes(x=speed_fps, y=dist_over_speed)) +
+    geom_point() +
+    geom_smooth(method = "lm", colour = "blue") +
+  labs (
+    x = "Speed (ft/s)",
+    y = "Time (seconds)"
+  )
+```
+
+### RNA-seq ASSESSMENT
+
+## Task 3.8
+First, we install the packages that we require for the subsequent tasks & tasks in ChIPseq
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("DESeq2")
+BiocManager::install("goseq")
+BiocManager::install("RColorBrewer")
+BiocManager::install("pheatmap")
+BiocManager::install("KEGG.db")
+BiocManager::install("biomaRt")
+BiocManager::install("org.Mm.eg.db")
+BiocManager::install("ChIPseeker")
+BiocManager::install("BSgenome.Mmusculus.UCSC.mm9")
+BiocManager::install("ChIPQC")
+
+install.packages("ggplot2",dependencies=TRUE)
+install.packages("rmarkdown",dependencies=TRUE)
+```
+
+We load the relevant packages
+```{r}
+library(GenomeInfoDb)
+library(GenomicRanges)
+library(org.Mm.eg.db)
+library(ChIPseeker)
+library(BSgenome)
+library(BSgenome.Mmusculus.UCSC.mm9)
+library(DESeq2)
+library(ChIPQC)
+library(TxDb.Mmusculus.UCSC.mm9.knownGene)
+```
+
+Next, we set the working directory. Next, we read in the counts and the sample description
+```{r}
+setwd("C:\\Users\\tangu\\Downloads\\LMS_RNAseq_short-master-2023-final\\LMS_RNAseq_short-master-2023-final\\course\\exercises\\data")
+all_counts <- read.csv("exercise1_counts.csv", header = T, row.names = 1)
+sam_des <- read.table("exercise1_sample_description.info", header = TRUE, sep = "\t")
+```
+
+## Task 3.9
+Next, we will create the col_data to prepare the data for DESeq
+```{r}
+col_data <- data.frame(sample = sam_des$sample, condition = sam_des$condition, batch = sam_des$batch)
+col_data$sample <- as.factor(col_data$sample)
+col_data$condition <- as.factor(col_data$condition)
+col_data$batch <- as.factor(col_data$batch)
+```
+
+Next, we check dimensions
+```{r}
+all(colnames(all_counts) == col_data$name)
+```
+
+## Task 3.10
+First, we load the DESeq library 
+```{r}
+library(DESeq2)
+```
+
+Then we create & view the DESeq object, then normalise it using DESeq
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = all_counts, colData = col_data, design =~ condition)
+dds
+dds <- DESeq(dds)
+```
+## Task 3.11
+For downstream analysis, we require the variance of gene expression to be more consistent across different expression levels.
+For this we can use rlog:
+```{r}
+rld <- rlog(dds)
+```
+
+Or we can use VST, which can be faster when working on large datasets:
+```{r}
+vsd <- varianceStabilizingTransformation(dds)
+```
+
+We get rld and vsd in count format, in order to view and inspect the result. 
+```{r}
+rld_counts <- assay(rld)
+vsd_counts <- assay(vsd)
+View(rld_counts)
+View(vsd_counts)
+```
+
+## Task 3.12
+First we load the pheatmap library
+```{r}
+library("pheatmap")
+```
+
+Then we get the normalised dds counts
+```{r}
+dds_counts <- counts(dds, normalized = TRUE)
+```
+
+Then we select the top 40 highly expressed genes based on mean normalised counts
+```{r}
+mean_counts <- rowMeans(dds_counts)
+select <- order(mean_counts, decreasing = TRUE)[1:40]
+```
+
+We then plot the heatmap using rld (rlog transformed data)
+```{r}
+pheatmap(rld_counts[select, ])
+```
+
+Alternatively, we can used the VST transformed data:
+```{r}
+pheatmap(vsd_counts[select, ])
+```
+
+## Task 3.13
+We can then further explore our data using the Sample Distance Matrix, to see if biological replicates cluster together in separate groups. We will use the rlog for this.
+```{r}
+sample_dist <- dist(t(rld_counts))
+sdm <- as.matrix(sample_dist)
+```
+
+We load the library to visualise this data 
+```{r}
+library("RColorBrewer")
+```
+
+We can add row names and colour to the plot
+```{r}
+rownames(sdm) <- rld$Group
+colnames(sdm) <- NULL
+colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
+```
+
+We plot the heatmap to visualise the SDM
+```{r}
+pheatmap(sdm,
+         clustering_distance_rows = sample_dist,
+         clustering_distance_cols = sample_dist,
+         col = colors)
+```
+
+## Task 3.14
+We draw the PCA plot on the rlog transformed data
+```{r}
+plotPCA(rld, intgroup = "condition")
+```
+Based on this, the first two principal components have 13 and 70% significance. 
+
+## Task 3.15
+We can repeat the above step using the VST data 
+```{r}
+plotPCA(vsd, intgroup = "condition")
+```
+
+### ChIP-seq assessment
+## Task 3.16
+We load the correct library
+```{r}
+library(GenomicRanges)
+```
+
+We set the working directory & read in the relevant datasets
+```{r}
+setwd("C:\\Users\\tangu\\Downloads\\LMS_ChIPseq_short-master-2023-final\\LMS_ChIPseq_short-master-2023-final\\course")
+melPeak_Rep1 <- read.delim("data/MacsPeaks/mycmelrep1_peaks.xls",sep="\t",comment.char = "#")
+melPeak_Rep2 <- read.delim("data/MacsPeaks/mycmelrep2_peaks.xls",sep="\t",comment.char = "#")
+```
+
+Next, for each dataset we creat an object which contains peak location using GRanges
+```{r}
+melRep1_GR <- GRanges(
+                  seqnames=melPeak_Rep1[,"chr"],
+                  IRanges(melPeak_Rep1[,"start"],
+                  melPeak_Rep1[,"end"]
+                  )
+                )
+```
+
+Next we assign new metadata columns to specify the absolute summit position of the peak and the fold enrichment score.
+```{r}
+mcols(melRep1_GR) <- melPeak_Rep1[,c("abs_summit", "fold_enrichment")]
+```
+
+We repeat these steps for the second replicate
+```{r}
+melRep2_GR <- GRanges(
+                  seqnames=melPeak_Rep2[,"chr"],
+                  IRanges(melPeak_Rep2[,"start"],
+                  melPeak_Rep2[,"end"]
+                  )
+                )
+
+mcols(melRep2_GR) <- melPeak_Rep2[,c("abs_summit", "fold_enrichment")]
+```
+
+Finally, we generate the object commonMelPeaks which contains overlap between the two peaksets (the common peakset):
+```{r}
+commonMelPeaks <- melRep1_GR[melRep1_GR %over% melRep2_GR]
+```
+
+## Task 3.17
+We can rank the common peakset by peak enrichment (from highest to lowest)
+```{r}
+ranked_peaks <- commonMelPeaks[order(commonMelPeaks$fold_enrichment, decreasing = TRUE), ]
+```
+
+Next, we select the top 500
+```{r}
+top_500_peaks <- head(ranked_peaks, 500)
+```
+
+Next we resized the peaks to 200bp around centre. 
+```{r}
+top_500_peaks <- resize(top_500_peaks, 200, fix="center")
+```
+
+## Task 3.18
+We define the genome object & format the top_500_peaks object
+```{r}
+genome <- BSgenome.Mmusculus.UCSC.mm9
+seqlevelsStyle(top_500_peaks) <- "UCSC"
+```
+
+We use getSeq to give us the sequences under peaks 
+```{r}
+commonPeaksSequences <- getSeq(genome,GRanges(top_500_peaks))
+names(commonPeaksSequences) <- paste0("peak_",seqnames(top_500_peaks),"_",
+                                        start(top_500_peaks),
+                                        "-",
+                                        end(top_500_peaks))
+```
+
+We extract this to FASTA file
+```{r}
+writeXStringSet(commonPeaksSequences,file="consensusPeaks.fa")
+```
+
+## Task 3.19
+The resulting sequences were uploaded to MEME-ChIP
