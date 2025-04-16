@@ -11,3 +11,4 @@ Additional information and justifications are found in the submitted assignment 
 
 Rstudio assessment:
 The markdown document has been shared in R_assignment.Rmd
+The HTML file has been shared in R_assignment.html
